@@ -135,7 +135,6 @@ with tab2:
         for macd_range in macd_bins:
             for volume_range in volume_bins:
                 for body_range in body_bins:
-                    st.text(f"Checking combo: RSI {rsi_min}-{rsi_max}, MACD {macd_range}, Volume {volume_range}, Body {body_range}")
 
                     subset = df[
                         (df["RSI"] >= rsi_min) & (df["RSI"] <= rsi_max) &
