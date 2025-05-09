@@ -31,6 +31,7 @@ df["MACD_signal"] = macd.macd_signal()
 df["Body"] = df["Close"] - df["Open"]
 df["Body_pct"] = df["Body"] / df["Open"] * 100
 
+
 # --- Tabs ---
 tab1, tab2 = st.tabs(["📊 Manual Forecast", "🔍 Top 5 Setups"])
 
@@ -118,7 +119,7 @@ with tab2:
     st.subheader("🔍 Top 5 Setups for This Stock")
 
     # Narrowed RSI buckets (10-point width)
-    rsi_bins = [(i, i + 5) for i in range(0, 100, 5)]
+    rsi_bins = [(i, i + 10) for i in range(0, 100, 10)]
 
     # Fixed-width 100k volume buckets
     volume_min = int(df["Volume"].min())
