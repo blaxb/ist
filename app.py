@@ -118,7 +118,7 @@ with tab2:
     st.subheader("🔍 Top 5 Setups for This Stock")
 
     # Narrowed RSI buckets (10-point width)
-    rsi_bins = [(0, 20), (20, 30), (30, 40), (40, 50), (50, 60), (60, 70), (70, 80), (80, 100)]
+    rsi_bins = [(i, i + 5) for i in range(0, 100, 5)]
 
     # Fixed-width 100k volume buckets
     volume_min = int(df["Volume"].min())
