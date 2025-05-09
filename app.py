@@ -140,6 +140,10 @@ with tab2:
                         (df["Volume"] >= volume_range[0]) & (df["Volume"] <= volume_range[1]) &
                         (df["Body_pct"] >= body_range.left) & (df["Body_pct"] <= body_range.right)
                     ]
+                    if subset.shape[0] < 10:
+                        continue
+     
+
                     for idx in subset.index:
                         try:
                             price_now = df.loc[idx, "Close"]
@@ -167,5 +171,3 @@ with tab2:
             st.markdown(f"RSI {row['RSI']}, MACD {row['MACD']}, Volume {row['Volume']}, Body {row['Body%']} → 📈 Win Rate: **{row['win_rate']}%** over {row['trades']} trades")
     else:
         st.warning("No strong setups found based on current data.")
-
-
