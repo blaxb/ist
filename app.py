@@ -167,3 +167,5 @@ with tab2:
             st.markdown(f"RSI {row['RSI']}, MACD {row['MACD']}, Volume {row['Volume']}, Body {row['Body%']} → 📈 Win Rate: **{row['win_rate']}%** over {row['trades']} trades")
     else:
         st.warning("No strong setups found based on current data.")
+
+
