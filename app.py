@@ -123,7 +123,7 @@ with tab2:
     # Fixed-width 100k volume buckets
     volume_min = int(df["Volume"].min())
     volume_max = int(df["Volume"].max())
-    volume_bins = [(i, i + 100_000) for i in range(volume_min, volume_max, 100_000)]
+    volume_bins = [(i, i + 200_000) for i in range(volume_min, volume_max, 200_000)]
 
     macd_bins = pd.qcut(df["MACD"].dropna(), 4, duplicates='drop').unique().tolist()
     body_bins = pd.qcut(df["Body_pct"].dropna(), 4, duplicates='drop').unique().tolist()
@@ -134,12 +134,15 @@ with tab2:
         for macd_range in macd_bins:
             for volume_range in volume_bins:
                 for body_range in body_bins:
+                    st.text(f"Checking combo: RSI {rsi_min}-{rsi_max}, MACD {macd_range}, Volume {volume_range}, Body {body_range}")
+
                     subset = df[
                         (df["RSI"] >= rsi_min) & (df["RSI"] <= rsi_max) &
                         (df["MACD"] >= macd_range.left) & (df["MACD"] <= macd_range.right) &
                         (df["Volume"] >= volume_range[0]) & (df["Volume"] <= volume_range[1]) &
                         (df["Body_pct"] >= body_range.left) & (df["Body_pct"] <= body_range.right)
                     ]
+                    
                     if subset.shape[0] < 10:
                         continue
      
