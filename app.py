@@ -115,62 +115,52 @@ with tab1:
         else:
             st.warning("Not enough data for those filters.")
 with tab2:
-    # --- Best Setups Finder ---
     st.subheader("🔍 Top 5 Setups for This Stock")
 
-    # Narrowed RSI buckets (10-point width)
-    rsi_bins = [(i, i + 10) for i in range(20, 80, 10)]
-
-    # Fixed-width 200k volume buckets
+    # Volume range setup
     volume_min = int(df["Volume"].min())
     volume_max = int(df["Volume"].max())
-    volume_bins = [(i, i + 200_000) for i in range(volume_min, volume_max, 200_000)]
+    volume_bins = range(volume_min, volume_max + 200_000, 200_000)
 
-    macd_bins = pd.qcut(df["MACD"].dropna(), 4, duplicates='drop').unique().tolist()
-    body_bins = pd.qcut(df["Body_pct"].dropna(), 4, duplicates='drop').unique().tolist()
+    # Create bin labels
+    df["RSI_bin"] = pd.cut(df["RSI"], bins=[20, 30, 40, 50, 60, 70, 80])
+    df["MACD_bin"] = pd.qcut(df["MACD"].dropna(), 4, duplicates='drop')
+    df["Volume_bin"] = pd.cut(df["Volume"], bins=volume_bins)
+    df["Body_bin"] = pd.qcut(df["Body_pct"].dropna(), 4, duplicates='drop')
+
+    # Drop any rows with NA in bins
+    binned_df = df.dropna(subset=["RSI_bin", "MACD_bin", "Volume_bin", "Body_bin"])
 
     results = []
+    grouped = binned_df.groupby(["RSI_bin", "MACD_bin", "Volume_bin", "Body_bin"])
 
-    for rsi_min, rsi_max in rsi_bins:
-        for macd_range in macd_bins:
-            for volume_range in volume_bins:
-                for body_range in body_bins:
+    for keys, group in grouped:
+        if len(group) < 10:
+            continue
+        try:
+            price_now = group["Close"]
+            price_5 = group["Close"].shift(-1)
+            ret_5 = ((price_5 - price_now) / price_now) * 100
 
-                    subset = df[
-                        (df["RSI"] >= rsi_min) & (df["RSI"] <= rsi_max) &
-                        (df["MACD"] >= macd_range.left) & (df["MACD"] <= macd_range.right) &
-                        (df["Volume"] >= volume_range[0]) & (df["Volume"] <= volume_range[1]) &
-                        (df["Body_pct"] >= body_range.left) & (df["Body_pct"] <= body_range.right)
-                    ]
-                    
-                    if subset.shape[0] < 10:
-                        continue
-     
-
-                    for idx in subset.index:
-                        try:
-                            price_now = df.loc[idx, "Close"]
-                            price_5 = df.loc[idx + 1, "Close"]
-                            ret_5 = ((price_5 - price_now) / price_now) * 100
-                            results.append({
-                                "RSI": f"{rsi_min}-{rsi_max}",
-                                "MACD": f"{macd_range.left:.2f}-{macd_range.right:.2f}",
-                                "Volume": f"{int(volume_range[0]):,}-{int(volume_range[1]):,}",
-                                "Body%": f"{body_range.left:.2f}-{body_range.right:.2f}",
-                                "Return": ret_5
-                            })
-                        except:
-                            continue
+            results.append({
+                "RSI": str(keys[0]),
+                "MACD": f"{keys[1].left:.2f}-{keys[1].right:.2f}",
+                "Volume": f"{int(keys[2].left):,}-{int(keys[2].right):,}",
+                "Body%": f"{keys[3].left:.2f}-{keys[3].right:.2f}",
+                "avg_return": round(ret_5.mean(), 3),
+                "win_rate": round((ret_5 > 0).mean() * 100, 2),
+                "trades": len(group)
+            })
+        except:
+            continue
 
     if results:
         df_results = pd.DataFrame(results)
-        summary = df_results.groupby(["RSI", "MACD", "Volume", "Body%"]).agg(
-            win_rate=("Return", lambda x: round((x > 0).sum() / len(x) * 100, 2)),
-            avg_return=("Return", lambda x: round(x.mean(), 3)),
-            trades=("Return", "count")
-        ).reset_index()
-        top_strategies = summary[summary["trades"] >= 10].sort_values(by="win_rate", ascending=False).head(5)
+        top_strategies = df_results.sort_values(by="win_rate", ascending=False).head(5)
         for _, row in top_strategies.iterrows():
-            st.markdown(f"RSI {row['RSI']}, MACD {row['MACD']}, Volume {row['Volume']}, Body {row['Body%']} → 📈 Win Rate: **{row['win_rate']}%** over {row['trades']} trades")
+            st.markdown(
+                f"RSI {row['RSI']}, MACD {row['MACD']}, Volume {row['Volume']}, Body {row['Body%']} "
+                f"→ 📈 Win Rate: **{row['win_rate']}%** | Avg Return: **{row['avg_return']}%** over {row['trades']} trades"
+            )
     else:
         st.warning("No strong setups found based on current data.")
