@@ -1,0 +1,2 @@
+email,ticker,rsi_min,rsi_max,macd_min,macd_max,body_pct_min,body_pct_max
+,ALL,20,40,-1.0,1.0,0.5,3.0
